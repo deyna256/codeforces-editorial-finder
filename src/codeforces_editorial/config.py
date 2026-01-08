@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # HTTP
     http_timeout: int = Field(default=30, description="HTTP request timeout in seconds")
     http_retries: int = Field(default=3, description="Number of HTTP retry attempts")
+    http_js_wait: int = Field(
+        default=5000, description="Time to wait for JS content to load (milliseconds)"
+    )
     user_agent: str = Field(
         default="codeforces-editorial-finder/1.0", description="User agent for HTTP requests"
     )
