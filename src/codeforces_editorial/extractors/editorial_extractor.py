@@ -91,27 +91,41 @@ class EditorialExtractor:
         Returns:
             Editorial object
         """
-        # Extract different sections from response
-        # This is a simple parser - in production you might want structured output
+        # Check if AI couldn't find the problem in the tutorial
+        if response.strip().startswith("NOT_FOUND"):
+            logger.warning(f"AI could not find problem {identifier.problem_id} in tutorial")
+            raise ExtractionError(
+                f"Could not find editorial for problem {identifier.problem_id} in the tutorial. "
+                f"AI response: {response[:500]}"
+            )
 
-        approach = self._extract_section(response, ["Approach", "Solution Approach"])
-        algorithm = self._extract_section(response, ["Algorithm", "Data Structure"])
-        time_complexity = self._extract_complexity(response, "Time")
-        space_complexity = self._extract_complexity(response, "Space")
-        code_snippets = self._extract_code_snippets(response)
-        hints = self._extract_hints(response)
-        notes = self._extract_section(response, ["Notes", "Additional Notes"])
+        # Extract metadata and original editorial text
+        # The response should have metadata at the top, followed by the original text
+
+        # Try to split metadata section from the actual editorial
+        metadata_pattern = r"^---\n(.*?)\n---\n\n(.+)$"
+        match = re.search(metadata_pattern, response, re.DOTALL)
+
+        if match:
+            # Metadata found, use the text after metadata
+            solution_text = match.group(2).strip()
+        else:
+            # No metadata separator, use full response
+            solution_text = response.strip()
+
+        # Extract code snippets for convenience (but keep them in original text)
+        code_snippets = self._extract_code_snippets(solution_text)
 
         return Editorial(
             problem_id=identifier.problem_id,
-            solution_text=response,  # Full response as solution text
-            approach=approach,
-            algorithm=algorithm,
-            time_complexity=time_complexity,
-            space_complexity=space_complexity,
+            solution_text=solution_text,  # Original editorial text
+            approach=None,
+            algorithm=None,
+            time_complexity=None,
+            space_complexity=None,
             code_snippets=code_snippets,
-            hints=hints,
-            notes=notes,
+            hints=[],
+            notes=None,
             source_url=source_url,
             extracted_at=datetime.now(),
             ai_model=self.ai_client.model,
