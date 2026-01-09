@@ -12,7 +12,6 @@ from codeforces_editorial.utils.exceptions import URLParseError
 class URLParser:
     """Parser for various Codeforces URL formats."""
 
-    # Supported URL patterns
     PATTERNS = [
         # https://codeforces.com/contest/1234/problem/A
         r"codeforces\.(com|ru)/contest/(\d+)/problem/([A-Z]\d*)",
@@ -45,7 +44,6 @@ class URLParser:
         """
         logger.debug(f"Parsing URL: {url}")
 
-        # Validate URL
         try:
             parsed = urlparse(url)
             if not parsed.scheme or not parsed.netloc:
@@ -53,16 +51,13 @@ class URLParser:
         except Exception as e:
             raise URLParseError(f"Failed to parse URL: {url}") from e
 
-        # Try each pattern
         for pattern in cls.PATTERNS:
             match = re.search(pattern, url)
             if match:
                 groups = match.groups()
 
-                # Check if it's a gym problem
                 is_gym = "/gym/" in url
 
-                # Extract contest_id and problem_id
                 if is_gym:
                     # Pattern: gym/contest_id/problem/problem_id
                     contest_id = groups[1]
