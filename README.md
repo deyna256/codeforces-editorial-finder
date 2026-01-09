@@ -4,7 +4,11 @@
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-CLI tool for extracting editorials/tutorials for Codeforces problems using OpenAI API.
+## About
+
+**Codeforces Editorial Finder** is a CLI tool designed to help competitive programmers learn faster by automating the search for problem solutions.
+
+It locates editorials for specific Codeforces problems—even if they are hidden in PDFs or lazy-loaded pages—and uses the **OpenAI API** to extract and format the exact solution you need into clean Markdown.
 
 ## Features
 
