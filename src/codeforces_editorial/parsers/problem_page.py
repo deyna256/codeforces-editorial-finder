@@ -37,15 +37,6 @@ class ProblemPageParser:
     def parse_problem_page(self, identifier: ProblemIdentifier) -> ProblemData:
         """
         Parse problem page and extract data.
-
-        Args:
-            identifier: Problem identifier
-
-        Returns:
-            ProblemData with extracted information
-
-        Raises:
-            ParsingError: If parsing fails
         """
         url = URLParser.build_problem_url(identifier)
         logger.info(f"Parsing problem page: {url}")
@@ -54,31 +45,19 @@ class ProblemPageParser:
             html = self.http_client.get_text(url)
             soup = BeautifulSoup(html, "lxml")
 
-            # Extract problem title
+            # Extract minimal metadata
             title = self._extract_title(soup)
-
-            # Extract contest name
             contest_name = self._extract_contest_name(soup)
 
-            # Extract time and memory limits
-            time_limit = self._extract_time_limit(soup)
-            memory_limit = self._extract_memory_limit(soup)
-
-            # Extract problem description
-            description = self._extract_description(soup)
-
-            # Extract tags
-            tags = self._extract_tags(soup)
+            # Extract only the links from 'Contest materials'
+            editorial_links = self._extract_editorial_links(soup)
 
             problem_data = ProblemData(
                 identifier=identifier,
                 title=title,
                 url=url,
                 contest_name=contest_name,
-                description=description,
-                time_limit=time_limit,
-                memory_limit=memory_limit,
-                tags=tags,
+                possible_editorial_links=editorial_links,
             )
 
             logger.info(f"Successfully parsed problem: {title}")
@@ -123,62 +102,40 @@ class ProblemPageParser:
             if breadcrumbs:
                 links = breadcrumbs.find_all("a")
                 if len(links) > 0:
-                    return links[0].get_text(strip=True)
+                    # grab the last link
+                    return links[-1].get_text(strip=True)
             return None
         except Exception as e:
             logger.warning(f"Failed to extract contest name: {e}")
             return None
 
-    def _extract_time_limit(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract time limit."""
-        try:
-            time_limit_div = soup.find("div", class_="time-limit")
-            if time_limit_div:
-                return time_limit_div.get_text(strip=True)
-            return None
-        except Exception as e:
-            logger.warning(f"Failed to extract time limit: {e}")
-            return None
+    def _extract_editorial_links(self, soup: BeautifulSoup) -> list[str]:
+        """Extract links from the Contest materials section."""
 
-    def _extract_memory_limit(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract memory limit."""
+        links = []
         try:
-            memory_limit_div = soup.find("div", class_="memory-limit")
-            if memory_limit_div:
-                return memory_limit_div.get_text(strip=True)
-            return None
-        except Exception as e:
-            logger.warning(f"Failed to extract memory limit: {e}")
-            return None
+            # find all sidebar boxes
+            sideboxes = soup.find_all("div", class_="sidebox")
 
-    def _extract_description(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract problem description (first few paragraphs)."""
-        try:
-            # Find problem statement
-            statement = soup.find("div", class_="problem-statement")
-            if statement:
-                # Get first few paragraphs
-                paragraphs = statement.find_all("p", limit=3)
-                if paragraphs:
-                    return "\n\n".join(p.get_text(strip=True) for p in paragraphs)
-            return None
-        except Exception as e:
-            logger.warning(f"Failed to extract description: {e}")
-            return None
+            for box in sideboxes:
+                caption = box.find("div", class_="caption")
+                if not caption:
+                    continue
 
-    def _extract_tags(self, soup: BeautifulSoup) -> list[str]:
-        """Extract problem tags."""
-        try:
-            tags = []
-            # Tags are usually in span or div with specific classes
-            tag_elements = soup.find_all("span", class_="tag-box")
-            for elem in tag_elements:
-                tag_text = elem.get_text(strip=True)
-                if tag_text:
-                    tags.append(tag_text)
-            return tags
+                # Look for the 'contest materials' box
+                if "materials" in caption.get_text(strip=True).lower():
+                    # Extract all links inside the box
+                    for link in box.find_all("a", href=True):
+                        href = str(link["href"])
+                        # Filter for relevant links
+                        if "/blog/" in href or "/contest/" in href:
+                            full_link = (
+                                f"https://codeforces.com{href}" if href.startswith("/") else href
+                            )
+                            links.append(full_link)
+            return links
         except Exception as e:
-            logger.warning(f"Failed to extract tags: {e}")
+            logger.warning(f"Failed to extract editorial links: {e}")
             return []
 
 
