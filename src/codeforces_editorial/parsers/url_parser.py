@@ -12,15 +12,13 @@ from codeforces_editorial.utils.exceptions import URLParseError
 class URLParser:
     """Parser for various Codeforces URL formats."""
 
-    # Supported URL patterns
-    PATTERNS = [
-        # https://codeforces.com/contest/1234/problem/A
-        r"codeforces\.(com|ru)/contest/(\d+)/problem/([A-Z]\d*)",
-        # https://codeforces.com/problemset/problem/1234/A
-        r"codeforces\.(com|ru)/problemset/problem/(\d+)/([A-Z]\d*)",
-        # https://codeforces.com/gym/102345/problem/A
-        r"codeforces\.(com|ru)/gym/(\d+)/problem/([A-Z]\d*)",
-    ]
+    # Unified pattern matches:
+    # 1. contest/1234/problem/A
+    # 2. gym/1234/problem/A
+    # 3. problemset/problem/1234/A
+    PATTERN = (
+        r"codeforces\.(?:com|ru)/(?:contest|gym|problemset/problem)/(\d+)(?:/problem)?/([A-Z]\d*)"
+    )
 
     @classmethod
     def parse(cls, url: str) -> ProblemIdentifier:
@@ -53,34 +51,23 @@ class URLParser:
         except Exception as e:
             raise URLParseError(f"Failed to parse URL: {url}") from e
 
-        # Try each pattern
-        for pattern in cls.PATTERNS:
-            match = re.search(pattern, url)
-            if match:
-                groups = match.groups()
+        # Single Regex Matching
+        match = re.search(cls.PATTERN, url)
+        if match:
+            # Extraction
+            contest_id, problem_id = match.groups()
 
-                # Check if it's a gym problem
-                is_gym = "/gym/" in url
+            # Check if it's a gym problem
+            is_gym = "/gym/" in url
 
-                # Extract contest_id and problem_id
-                if is_gym:
-                    # Pattern: gym/contest_id/problem/problem_id
-                    contest_id = groups[1]
-                    problem_id = groups[2]
-                else:
-                    # Pattern: contest/contest_id/problem/problem_id
-                    # or problemset/problem/contest_id/problem_id
-                    contest_id = groups[1]
-                    problem_id = groups[2]
+            identifier = ProblemIdentifier(
+                contest_id=contest_id,
+                problem_id=problem_id,
+                is_gym=is_gym,
+            )
 
-                identifier = ProblemIdentifier(
-                    contest_id=contest_id,
-                    problem_id=problem_id,
-                    is_gym=is_gym,
-                )
-
-                logger.info(f"Parsed URL to problem: {identifier}")
-                return identifier
+            logger.info(f"Parsed URL to problem: {identifier}")
+            return identifier
 
         # No pattern matched
         raise URLParseError(
@@ -103,11 +90,9 @@ class URLParser:
             Full problem URL
         """
         base = "https://codeforces.com"
+        segment = "gym" if identifier.is_gym else "contest"
 
-        if identifier.is_gym:
-            url = f"{base}/gym/{identifier.contest_id}/problem/{identifier.problem_id}"
-        else:
-            url = f"{base}/contest/{identifier.contest_id}/problem/{identifier.problem_id}"
+        url = f"{base}/{segment}/{identifier.contest_id}/problem/{identifier.problem_id}"
 
         logger.debug(f"Built problem URL: {url}")
         return url
@@ -124,11 +109,9 @@ class URLParser:
             Contest main page URL
         """
         base = "https://codeforces.com"
+        segment = "gym" if identifier.is_gym else "contest"
 
-        if identifier.is_gym:
-            url = f"{base}/gym/{identifier.contest_id}"
-        else:
-            url = f"{base}/contest/{identifier.contest_id}"
+        url = f"{base}/{segment}/{identifier.contest_id}"
 
         logger.debug(f"Built contest URL: {url}")
         return url
