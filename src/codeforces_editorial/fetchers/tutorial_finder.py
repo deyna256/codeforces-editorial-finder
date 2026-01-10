@@ -20,23 +20,15 @@ class TutorialFinder:
         ai_client: Optional[OpenAIClient] = None,
         http_client: Optional[HTTPClient] = None,
     ):
-        """
-        Initialize tutorial finder.
-
-        Args:
-            ai_client: OpenAI API client
-            http_client: HTTP client
-        """
+      
         self.ai_client = ai_client or OpenAIClient()
         self.http = http_client or HTTPClient()
         self._should_close_http = http_client is None
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         if self._should_close_http:
             self.http.close()
 
@@ -55,17 +47,14 @@ class TutorialFinder:
         """
         logger.info(f"Searching for tutorial for problem {identifier}")
 
-        # Strategy 1: Try contest page
         tutorial_url = self._try_contest_page(identifier)
         if tutorial_url:
             return tutorial_url
 
-        # Strategy 2: Try common blog patterns
         tutorial_url = self._try_blog_patterns(identifier)
         if tutorial_url:
             return tutorial_url
 
-        # If all strategies fail
         raise EditorialNotFoundError(
             f"Could not find tutorial for problem {identifier}. "
             f"The contest might not have an editorial, or it might be in an unexpected location."

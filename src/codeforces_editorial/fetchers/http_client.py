@@ -23,13 +23,6 @@ class HTTPClient:
     """HTTP client with retry logic and error handling."""
 
     def __init__(self, timeout: Optional[int] = None, user_agent: Optional[str] = None):
-        """
-        Initialize HTTP client.
-
-        Args:
-            timeout: Request timeout in seconds
-            user_agent: User agent string for requests
-        """
         settings = get_settings()
         self.timeout = timeout or settings.http_timeout
         self.user_agent = user_agent or settings.user_agent
@@ -42,15 +35,12 @@ class HTTPClient:
         )
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         self.close()
 
     def close(self) -> None:
-        """Close the HTTP client."""
         self.client.close()
 
     @retry(
@@ -162,16 +152,13 @@ class HTTPClient:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page(user_agent=self.user_agent)
 
-                # Navigate to page
                 page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
 
                 # Wait for dynamic content to load
                 page.wait_for_timeout(wait_time)
 
-                # Get rendered HTML
                 content = page.content()
 
-                # Cleanup
                 browser.close()
 
                 logger.info(f"Successfully fetched URL with JS: {url} ({len(content)} chars)")

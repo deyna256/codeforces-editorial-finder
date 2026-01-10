@@ -25,13 +25,6 @@ class EditorialOrchestrator:
         use_cache: bool = True,
         cache_dir: Optional[str] = None,
     ):
-        """
-        Initialize orchestrator.
-
-        Args:
-            use_cache: Whether to use caching
-            cache_dir: Cache directory (uses config if None)
-        """
         self.use_cache = use_cache
         self.cache = EditorialCache(cache_dir) if use_cache else None
 
@@ -40,11 +33,9 @@ class EditorialOrchestrator:
         self.ai_client = OpenAIClient()
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         self.http_client.close()
         if self.cache:
             self.cache.close()
