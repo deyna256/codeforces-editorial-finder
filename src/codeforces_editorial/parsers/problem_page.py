@@ -3,13 +3,19 @@
 import re
 from typing import Optional
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from loguru import logger
 
 from codeforces_editorial.models import ProblemData, ProblemIdentifier
 from codeforces_editorial.utils.exceptions import ParsingError
 from codeforces_editorial.fetchers.http_client import HTTPClient
 from codeforces_editorial.parsers.url_parser import URLParser
+
+
+# Constants
+MATERIALS_CAPTION_KEYWORD = "materials"
+RELEVANT_URL_SEGMENTS = ("/blog/", "/contest/")
+CODEFORCES_BASE_URL = "https://codeforces.com"
 
 
 class ProblemPageParser:
@@ -117,22 +123,39 @@ class ProblemPageParser:
         sideboxes = soup.find_all("div", class_="sidebox")
 
         for box in sideboxes:
-            caption = box.find("div", class_="caption")
-            if not caption:
-                continue
+            if self._is_materials_box(box):
+                box_links = self._extract_links_from_box(box)
+                links.extend(box_links)
 
-            # Look for the 'contest materials' box
-            if "materials" in caption.get_text(strip=True).lower():
-                # Extract all links inside the box
-                for link in box.find_all("a", href=True):
-                    href = str(link["href"])
-                    # Filter for relevant links
-                    if "/blog/" in href or "/contest/" in href:
-                        full_link = (
-                            f"https://codeforces.com{href}" if href.startswith("/") else href
-                        )
-                        links.append(full_link)
         return links
+
+    def _is_materials_box(self, box: Tag) -> bool:
+        """Check if sidebar box contains contest materials"""
+
+        caption = box.find("div", class_="caption")
+        if not caption:
+            return False
+
+        return MATERIALS_CAPTION_KEYWORD in caption.get_text(strip=True).lower()
+
+    def _extract_links_from_box(self, box: Tag) -> list[str]:
+        """Extract links from sidebar box"""
+
+        links = []
+        for link in box.find_all("a", href=True):
+            href = str(link["href"])
+
+            # Check if link contains any relevant path segment
+            if any(segment in href for segment in RELEVANT_URL_SEGMENTS):
+                full_link = self._normalize_url(href=href)
+                links.append(full_link)
+        return links
+
+    def _normalize_url(self, href: str) -> str:
+        """Ensure URL is absolute"""
+        if href.startswith("/"):
+            return f"{CODEFORCES_BASE_URL}{href}"
+        return href
 
 
 def parse_problem(url: str, http_client: Optional[HTTPClient] = None) -> ProblemData:
