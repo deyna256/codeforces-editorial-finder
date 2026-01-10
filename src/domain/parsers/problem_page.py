@@ -1,7 +1,7 @@
 """Parser for Codeforces problem pages."""
 
 import re
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
@@ -9,6 +9,9 @@ from loguru import logger
 from domain.models import ProblemData, ProblemIdentifier
 from domain.exceptions import ParsingError
 from domain.parsers.url_parser import URLParser
+
+if TYPE_CHECKING:
+    from infrastructure.http_client import AsyncHTTPClient
 
 
 class ProblemPageParser:
@@ -19,7 +22,7 @@ class ProblemPageParser:
     RELEVANT_URL_SEGMENTS = ("/blog/", "/contest/")
     CODEFORCES_BASE_URL = "https://codeforces.com"
 
-    def __init__(self, http_client: Optional[HTTPClient] = None):
+    def __init__(self, http_client: Optional["AsyncHTTPClient"] = None):
         """
         Initialize parser.
 
@@ -34,6 +37,9 @@ class ProblemPageParser:
         """
         url = URLParser.build_problem_url(identifier)
         logger.info(f"Parsing problem page: {url}")
+
+        if not self.http_client:
+            raise ParsingError(f"HTTP client not initialized for {url}")
 
         try:
             html = await self.http_client.get_text(url)
@@ -146,7 +152,7 @@ class ProblemPageParser:
         return href
 
 
-def parse_problem(url: str, http_client: Optional[HTTPClient] = None) -> ProblemData:
+async def parse_problem(url: str, http_client: Optional["AsyncHTTPClient"] = None) -> ProblemData:
     """
     Convenience function to parse problem from URL.
 
@@ -157,9 +163,9 @@ def parse_problem(url: str, http_client: Optional[HTTPClient] = None) -> Problem
     Returns:
         ProblemData
     """
-    from codeforces_editorial.parsers.url_parser import parse_problem_url
+    from domain.parsers.url_parser import parse_problem_url
 
     identifier = parse_problem_url(url)
 
-    with ProblemPageParser(http_client) as parser:
-        return parser.parse_problem_page(identifier)
+    parser = ProblemPageParser(http_client)
+    return await parser.parse_problem_page(identifier)

@@ -7,7 +7,7 @@ class CodeforcesEditorialError(Exception):
     pass
 
 
-class URLParseError(CodeforcesEditorialError):
+class URLParsingError(CodeforcesEditorialError):
     """Invalid URL format or unable to parse URL."""
 
     pass

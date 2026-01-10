@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from loguru import logger
 
 from domain.models import ProblemIdentifier
-from domain.exceptions import URLParseError
+from domain.exceptions import URLParsingError
 
 
 class URLParser:
@@ -25,9 +25,9 @@ class URLParser:
         try:
             parsed = urlparse(url)
             if not parsed.scheme or not parsed.netloc:
-                raise URLParseError(f"Invalid URL format: {url}")
+                raise URLParsingError(f"Invalid URL format: {url}")
         except Exception as e:
-            raise URLParseError(f"Failed to parse URL: {url}") from e
+            raise URLParsingError(f"Failed to parse URL: {url}") from e
 
         match = re.search(cls.PATTERN, url)
         if match:
@@ -43,7 +43,7 @@ class URLParser:
             return identifier
 
         # No pattern matched
-        raise URLParseError(
+        raise URLParsingError(
             f"Unrecognized Codeforces URL format: {url}. "
             "Expected format: https://codeforces.com/problemset/problem/<contest_id>/<problem_id>"
         )
@@ -78,7 +78,7 @@ class URLParser:
         try:
             cls.parse(url)
             return True
-        except URLParseError:
+        except URLParsingError:
             return False
 
 

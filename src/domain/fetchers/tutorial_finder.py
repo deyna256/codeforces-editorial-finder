@@ -9,7 +9,7 @@ from domain.models import ProblemIdentifier
 from domain.parsers.url_parser import URLParser
 from domain.exceptions import EditorialNotFoundError
 from infrastructure.openai_client import AsyncOpenAIClient
-from infrastructure.http_client.py import AsyncHTTPClient
+from infrastructure.http_client import AsyncHTTPClient
 
 
 class TutorialFinder:
@@ -159,7 +159,7 @@ class TutorialFinder:
         return url
 
 
-def find_tutorial_url(
+async def find_tutorial_url(
     identifier: ProblemIdentifier,
     ai_client: Optional[AsyncOpenAIClient] = None,
     http_client: Optional[AsyncHTTPClient] = None,
@@ -178,5 +178,5 @@ def find_tutorial_url(
     Raises:
         EditorialNotFoundError: If tutorial not found
     """
-    with TutorialFinder(ai_client, http_client) as finder:
-        return finder.find_tutorial(identifier)
+    finder = TutorialFinder(ai_client, http_client)
+    return await finder.find_tutorial(identifier)

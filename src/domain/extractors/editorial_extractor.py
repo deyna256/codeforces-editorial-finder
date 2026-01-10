@@ -241,7 +241,7 @@ class EditorialExtractor:
         return hints
 
 
-def extract_editorial(
+async def extract_editorial(
     tutorial: TutorialData,
     identifier: ProblemIdentifier,
     problem_title: str = "",
@@ -263,4 +263,4 @@ def extract_editorial(
         ExtractionError: If extraction fails
     """
     extractor = EditorialExtractor(ai_client)
-    return extractor.extract(tutorial, identifier, problem_title)
+    return await extractor.extract(tutorial, identifier, problem_title)
