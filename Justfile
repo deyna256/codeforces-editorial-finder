@@ -27,3 +27,24 @@ format:
 # Run tests
 test:
     uv run pytest
+
+# Build and start services using docker-compose
+up:
+    docker-compose up --build -d
+
+# Stop services
+down:
+    docker-compose down
+
+# Restart services
+restart:
+    docker-compose restart
+
+# View logs
+logs:
+    docker-compose logs -f
+
+# Clean up docker resources and local caches
+clean:
+    docker-compose down -v --rmi local
+    rm -rf .pytest_cache .ruff_cache .venv build dist *.egg-info
