@@ -2,7 +2,7 @@ import pytest
 
 from domain.parsers.url_parser import URLParser, parse_problem_url
 from domain.models import ProblemIdentifier
-from domain.exceptions import URLParseError
+from domain.exceptions import URLParsingError
 
 
 @pytest.mark.parametrize(
@@ -27,7 +27,7 @@ def test_parse_valid_urls(url, expected_contest, expected_problem) -> None:
 
 
 def test_parse_invalid_urls() -> None:
-    """Test that invalid URL raise URLParseError."""
+    """Test that invalid URL raise URLParsingError."""
 
     invalid_urls = [
         "not_a_url",  # wrong url
@@ -39,7 +39,7 @@ def test_parse_invalid_urls() -> None:
     ]
 
     for url in invalid_urls:
-        with pytest.raises((URLParseError)):
+        with pytest.raises((URLParsingError)):
             URLParser.parse(url=url)
 
 
