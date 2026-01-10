@@ -113,30 +113,26 @@ class ProblemPageParser:
         """Extract links from the Contest materials section."""
 
         links = []
-        try:
-            # find all sidebar boxes
-            sideboxes = soup.find_all("div", class_="sidebox")
+        # find all sidebar boxes
+        sideboxes = soup.find_all("div", class_="sidebox")
 
-            for box in sideboxes:
-                caption = box.find("div", class_="caption")
-                if not caption:
-                    continue
+        for box in sideboxes:
+            caption = box.find("div", class_="caption")
+            if not caption:
+                continue
 
-                # Look for the 'contest materials' box
-                if "materials" in caption.get_text(strip=True).lower():
-                    # Extract all links inside the box
-                    for link in box.find_all("a", href=True):
-                        href = str(link["href"])
-                        # Filter for relevant links
-                        if "/blog/" in href or "/contest/" in href:
-                            full_link = (
-                                f"https://codeforces.com{href}" if href.startswith("/") else href
-                            )
-                            links.append(full_link)
-            return links
-        except Exception as e:
-            logger.warning(f"Failed to extract editorial links: {e}")
-            return []
+            # Look for the 'contest materials' box
+            if "materials" in caption.get_text(strip=True).lower():
+                # Extract all links inside the box
+                for link in box.find_all("a", href=True):
+                    href = str(link["href"])
+                    # Filter for relevant links
+                    if "/blog/" in href or "/contest/" in href:
+                        full_link = (
+                            f"https://codeforces.com{href}" if href.startswith("/") else href
+                        )
+                        links.append(full_link)
+        return links
 
 
 def parse_problem(url: str, http_client: Optional[HTTPClient] = None) -> ProblemData:
