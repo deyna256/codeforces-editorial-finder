@@ -1,14 +1,11 @@
-version: '3.8'
-
 services:
   api:
     build: .
-    ports:
-      - "8000:8000"
+    network_mode: "host"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=redis://localhost:6379/0
       - CACHE_TTL_HOURS=${CACHE_TTL_HOURS:-168}
       - HTTP_TIMEOUT=${HTTP_TIMEOUT:-30}
       - HTTP_RETRIES=${HTTP_RETRIES:-3}
@@ -20,8 +17,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    network_mode: "host"
     volumes:
       - redis_data:/data
     restart: unless-stopped
