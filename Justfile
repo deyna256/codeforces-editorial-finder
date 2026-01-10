@@ -1,50 +1,49 @@
-# Codeforces Editorial Finder - Just commands
-
 # List available commands
 default:
     @just --list
 
-# Build the package
+# Build services
 build:
-    uv build
+    docker compose build
 
-# Run linting checks
-lint:
-    uv run ruff check .
+# Start services
+up:
+    docker compose up -d
 
-# Run linting with auto-fix
-lint-fix:
-    uv run ruff check --fix .
+# Stop services
+down:
+    docker compose down
 
-# Run type checking
-typecheck:
-    uv run ty check
+# Restart services
+restart:
+    just down
+    just up
 
-# Format code
-format:
-    uv run ruff format .
+# View logs
+logs:
+    docker compose logs -f
+
+# Clean up
+clean:
+    docker compose down -v --rmi local
+    rm -rf .pytest_cache .ruff_cache .venv build dist *.egg-info
 
 # Run tests
 test:
     uv run pytest
 
-# Build and start services using docker-compose
-up:
-    docker-compose up --build -d
+# Format code
+format:
+    uv run ruff format .
 
-# Stop services
-down:
-    docker-compose down
+# Run linting
+lint:
+    uv run ruff check .
 
-# Restart services
-restart:
-    docker-compose restart
+# Run linting with auto-fix
+lintfix:
+    uv run ruff check --fix .
 
-# View logs
-logs:
-    docker-compose logs -f
-
-# Clean up docker resources and local caches
-clean:
-    docker-compose down -v --rmi local
-    rm -rf .pytest_cache .ruff_cache .venv build dist *.egg-info
+# Run type checking
+typecheck:
+    uv run ty check
