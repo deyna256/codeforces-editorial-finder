@@ -11,7 +11,6 @@ from presentation.schemas import (
     EditorialResponse,
     EditorialSchema,
     ProblemSchema,
-    CodeSnippetSchema,
 )
 
 
