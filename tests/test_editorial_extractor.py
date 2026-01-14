@@ -3,7 +3,7 @@ import pytest
 
 from domain.models import ProblemIdentifier, TutorialData
 from domain.exceptions import ExtractionError
-from infrastructure.editorial_extractor import EditorialExtractor
+from domain.extractors.editorial_extractor import EditorialExtractor
 
 
 # ============================================================
