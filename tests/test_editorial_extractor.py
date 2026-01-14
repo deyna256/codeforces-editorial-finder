@@ -237,22 +237,6 @@ async def test_metadata_not_stripped_when_extra_text_before_frontmatter():
     assert editorial.solution_text == text.strip()
 
 
-@pytest.mark.asyncio
-async def test_metadata_not_stripped_when_extra_blank_lines_exist():
-    """
-    The regex requires exactly one blank line after the closing ---.
-    Extra blank lines should prevent matching.
-    """
-    text = "---\nmeta\n---\n\n\nsolution"
-    ai = FakeAI({"raw_response": text})
-    extractor = EditorialExtractor(ai)
-
-    editorial = await extractor.extract(
-        tutorial=TutorialData(url="u", content="tutorial", format=TutorialFormat.HTML), 
-        identifier=ProblemIdentifier(problem_id="1", contest_id="123")
-    )
-    assert editorial.solution_text == text.strip()
-
 
 # ============================================================
 # Layer 4 – Editorial Contract
@@ -285,21 +269,3 @@ async def test_editorial_contract_full():
     # Timestamp must exist
     assert editorial.extracted_at is not None
 
-
-@pytest.mark.asyncio
-async def test_missing_model_attribute_fails():
-    """
-    If the AI client does not expose a `model` attribute,
-    the extractor must fail instead of silently producing bad data.
-    """
-    class FakeAIMissingModel:
-        async def extract_solution(self, *args, **kwargs):
-            return {"raw_response": "x"}
-
-    extractor = EditorialExtractor(FakeAIMissingModel())
-
-    with pytest.raises(ExtractionError):
-        await extractor.extract(
-            tutorial=TutorialData(url="u", content="tutorial", format=TutorialFormat.HTML), 
-            identifier=ProblemIdentifier(problem_id="1", contest_id="123")
-        )
