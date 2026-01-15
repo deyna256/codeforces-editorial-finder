@@ -1,11 +1,16 @@
-# test_simple_models.py
-
 from domain.models.problem import ProblemData, ProblemIdentifier
 
-# Test ProblemData
-p = ProblemData(name="Two Sum", rating=1200, tags=["array"])
-print("ProblemData test:", p)
+# Create a ProblemIdentifier
+pid = ProblemIdentifier(contest_id="123", problem_id="A")
 
-# Test ProblemIdentifier
-pid = ProblemIdentifier(contest_id=123, problem_id="A")
+# Create a ProblemData
+p = ProblemData(
+    identifier=pid,
+    title="Two Sum",
+    url="https://codeforces.com/problemset/problem/123/A",
+    contest_name="Example Contest",
+    possible_editorial_links=[]
+)
+
+print("ProblemData test:", p)
 print("ProblemIdentifier test:", pid)
