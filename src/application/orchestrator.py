@@ -1,6 +1,7 @@
 """Async orchestrator for coordinating the editorial extraction process."""
 
 from typing import Optional
+import json
 
 from loguru import logger
 
@@ -62,12 +63,13 @@ class AsyncEditorialOrchestrator:
             logger.info("Step 1: Parsing URL")
             identifier = URLParser.parse(url)
 
+            cache_key = f"editorial:{identifier.contest_id}:{identifier.problem_id}"
+
             if self.use_cache and self.cache_client:
                 logger.info("Step 2: Checking cache")
-                cached = await self._get_from_cache(identifier.cache_key)
+                cached = await self._get_from_cache(cache_key)
                 if cached:
                     logger.info("Using cached editorial")
-                    # Fetch problem data for response
                     problem_data = await self.problem_parser.parse_problem_page(identifier)
                     return cached.editorial, problem_data
 
@@ -89,10 +91,8 @@ class AsyncEditorialOrchestrator:
 
             if self.use_cache and self.cache_client:
                 logger.info("Step 7: Caching result")
-                cached_editorial = CachedEditorial(
-                    editorial=editorial,
-                )
-                await self._save_to_cache(identifier.cache_key, cached_editorial)
+                cached_editorial = CachedEditorial(editorial=editorial)
+                await self._save_to_cache(cache_key, cached_editorial)
 
             logger.info("Editorial extraction completed successfully")
             return editorial, problem_data
@@ -104,40 +104,26 @@ class AsyncEditorialOrchestrator:
             raise CodeforcesEditorialError(f"Failed to get editorial: {e}") from e
 
     async def _get_from_cache(self, cache_key: str) -> Optional[CachedEditorial]:
-        """
-        Get cached editorial from Redis.
-
-        Args:
-            cache_key: Cache key
-
-        Returns:
-            CachedEditorial if found, None otherwise
-        """
+        """Get cached editorial from Redis (handles JSON serialization)."""
         if not self.cache_client:
             return None
-
         try:
             cached_data = await self.cache_client.get(cache_key)
             if cached_data:
-                return CachedEditorial.from_dict(cached_data)
+                if isinstance(cached_data, bytes):
+                    cached_data = cached_data.decode("utf-8")
+                return CachedEditorial.from_dict(json.loads(cached_data))
             return None
         except Exception as e:
             logger.warning(f"Failed to get from cache: {e}")
             return None
 
     async def _save_to_cache(self, cache_key: str, cached_editorial: CachedEditorial) -> None:
-        """
-        Save editorial to Redis cache.
-
-        Args:
-            cache_key: Cache key
-            cached_editorial: Editorial to cache
-        """
+        """Save editorial to Redis cache (JSON serialization)."""
         if not self.cache_client:
             return
-
         try:
-            cached_data = cached_editorial.to_dict()
+            cached_data = json.dumps(cached_editorial.to_dict())
             await self.cache_client.set(cache_key, cached_data)
         except Exception as e:
             logger.warning(f"Failed to save to cache: {e}")
