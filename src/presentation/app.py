@@ -1,5 +1,4 @@
 from litestar import Litestar
-from litestar.config.response_cache import ResponseCacheConfig
 from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.openapi.config import OpenAPIConfig
 from litestar.stores.redis import RedisStore
