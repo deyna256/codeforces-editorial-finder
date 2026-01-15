@@ -1,6 +1,5 @@
 # src/test_all_models.py
 
-from datetime import datetime
 from domain.models.problem import ProblemIdentifier, ProblemData
 from domain.models.editorial import Editorial, CodeSnippet, CachedEditorial
 

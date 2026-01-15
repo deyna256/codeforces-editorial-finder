@@ -1,6 +1,5 @@
 from .problem import ProblemIdentifier, ProblemData
-from .editorial import Editorial, TutorialData, CodeSnippet
-from .cached_editorial import CachedEditorial
+from .editorial import Editorial, TutorialData, CodeSnippet, CachedEditorial
 
 __all__ = [
     "ProblemIdentifier",

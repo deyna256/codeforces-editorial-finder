@@ -1,11 +1,8 @@
 """Parser for Codeforces problem URLs."""
 
 import re
-from urllib.parse import urlparse
-
 from loguru import logger
-
-from domain.models import ProblemIdentifier
+from domain.models.problem import ProblemIdentifier
 from domain.exceptions import URLParsingError
 
 
@@ -17,29 +14,19 @@ class URLParser:
 
     @classmethod
     def parse(cls, url: str) -> ProblemIdentifier:
-        """
-        Parse Codeforces problem URL and extract problem identifier.
-        """
+        """Parse Codeforces problem URL and extract problem identifier."""
         logger.debug(f"Parsing URL: {url}")
-
-        try:
-            parsed = urlparse(url)
-            if not parsed.scheme or not parsed.netloc:
-                raise URLParsingError(f"Invalid URL format: {url}")
-        except Exception as e:
-            raise URLParsingError(f"Failed to parse URL: {url}") from e
 
         match = re.search(cls.PATTERN, url)
         if match:
             contest_id, index = match.groups()
             identifier = ProblemIdentifier(
-                contest_id=contest_id,  # keep as string for tests
-                problem=index,
+                contest_id=contest_id,
+                problem_index=index,  # use problem_index now
             )
             logger.info(f"Parsed URL to problem: {identifier}")
             return identifier
 
-        # No pattern matched
         raise URLParsingError(
             f"Unrecognized Codeforces URL format: {url}. "
             "Expected format: https://codeforces.com/problemset/problem/<contest_id>/<problem>"
@@ -48,7 +35,7 @@ class URLParser:
     @classmethod
     def build_problem_url(cls, identifier: ProblemIdentifier) -> str:
         """Build problem URL from identifier."""
-        url = f"https://codeforces.com/problemset/problem/{identifier.contest_id}/{identifier.problem}"
+        url = f"https://codeforces.com/problemset/problem/{identifier.contest_id}/{identifier.problem_index}"
         logger.debug(f"Built problem URL: {url}")
         return url
 
