@@ -1,13 +1,21 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
+
 
 @dataclass
 class ProblemData:
-    name: str
-    rating: int
-    tags: List[str]
+    identifier: ProblemIdentifier
+    title: str
+    url: str
+    contest_name: Optional[str]
+    possible_editorial_links: List[str]
+
+
+
+from dataclasses import dataclass
 
 @dataclass
 class ProblemIdentifier:
-    contest_id: int
-    index: str
+    contest_id: str
+    problem_id: str
+    is_gym: bool = False
