@@ -1,7 +1,5 @@
 """Async wrapper around the OpenAI API used for editorial extraction."""
 
-from typing import Optional
-
 from openai import AsyncOpenAI
 import openai
 from loguru import logger
@@ -12,7 +10,7 @@ from domain.exceptions import OpenAIAPIError
 
 
 class AsyncOpenAIClient:
-    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+    def __init__(self, api_key: str | None = None, model: str | None = None):
         """
         Initialize the client, falling back to configured API key and model.
         Raises OpenAIAPIError if no API key is available.
@@ -45,8 +43,8 @@ class AsyncOpenAIClient:
         self,
         prompt: str,
         max_tokens: int = 4096,
-        temperature: float = 0.0,
-        system: Optional[str] = None,
+        temperature: float | None = None,
+        system: str | None = None,
     ) -> str:
         """
         Send a chat completion request to OpenAI with automatic retries and
@@ -63,14 +61,22 @@ class AsyncOpenAIClient:
 
             messages.append({"role": "user", "content": prompt})
 
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
+            params = {
+                "model": self.model,
+                "messages": messages,
+                "max_completion_tokens": max_tokens,
+            }
+
+            if temperature is not None:
+                params["temperature"] = temperature
+
+            response = await self.client.chat.completions.create(**params)
 
             response_text = response.choices[0].message.content
+            if response_text is None:
+                logger.warning("Response content is None - reasoning model may need more max_tokens")
+                response_text = ""
+
             logger.debug(f"Received response ({len(response_text)} chars)")
             logger.debug(f"Usage: {response.usage}")
 
@@ -88,7 +94,7 @@ class AsyncOpenAIClient:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
             raise OpenAIAPIError(f"Failed to call OpenAI API: {e}") from e
 
-    async def find_editorial_link(self, contest_html: str, problem_id: str) -> Optional[str]:
+    async def find_editorial_link(self, contest_html: str, problem_id: str) -> str | None:
         """
         Use OpenAI to extract an editorial URL for a given problem from contest page HTML.
         Returns None if no valid link is found.
@@ -102,8 +108,7 @@ class AsyncOpenAIClient:
         try:
             response = await self.send_message(
                 prompt=prompt,
-                max_tokens=500,
-                temperature=0.0,
+                max_tokens=2000,
                 system="You are a helpful assistant that extracts URLs from HTML content. "
                 "Return only the URL, nothing else.",
             )
@@ -149,7 +154,6 @@ class AsyncOpenAIClient:
             response = await self.send_message(
                 prompt=prompt,
                 max_tokens=8000,
-                temperature=0.0,
                 system="You are an expert at analyzing competitive programming editorials. "
                 "Extract and structure the solution information clearly and accurately.",
             )
@@ -185,8 +189,7 @@ class AsyncOpenAIClient:
         try:
             response = await self.send_message(
                 prompt=prompt,
-                max_tokens=10,
-                temperature=0.0,
+                max_tokens=1000,
             )
 
             response = response.strip().upper()
