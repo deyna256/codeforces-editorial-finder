@@ -15,7 +15,6 @@ from domain.exceptions import (
     ExtractionError,
     ParsingError,
     CacheError,
-    OpenAIAPIError,
 )
 from api.schemas import ErrorResponse
 
@@ -42,11 +41,6 @@ def exception_to_http_response(request: Request, exc: Exception) -> Response[Err
         status_code = HTTP_422_UNPROCESSABLE_ENTITY
         error_type = "ParsingError"
         detail = str(exc)
-
-    elif isinstance(exc, OpenAIAPIError):
-        status_code = HTTP_503_SERVICE_UNAVAILABLE
-        error_type = "OpenAIAPIError"
-        detail = "OpenAI API is currently unavailable. Please try again later."
 
     elif isinstance(exc, CacheError):
         logger.warning(f"Cache error (non-fatal): {exc}")
