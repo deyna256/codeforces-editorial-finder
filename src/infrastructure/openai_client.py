@@ -7,6 +7,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 
 from config import get_settings
 from domain.exceptions import OpenAIAPIError
+from domain.models import ProblemIdentifier
 
 
 class AsyncOpenAIClient:
@@ -74,7 +75,9 @@ class AsyncOpenAIClient:
 
             response_text = response.choices[0].message.content
             if response_text is None:
-                logger.warning("Response content is None - reasoning model may need more max_tokens")
+                logger.warning(
+                    "Response content is None - reasoning model may need more max_tokens"
+                )
                 response_text = ""
 
             logger.debug(f"Received response ({len(response_text)} chars)")
@@ -94,7 +97,9 @@ class AsyncOpenAIClient:
             logger.error(f"Unexpected error calling OpenAI API: {e}")
             raise OpenAIAPIError(f"Failed to call OpenAI API: {e}") from e
 
-    async def find_editorial_link(self, contest_html: str, problem_id: str) -> str | None:
+    async def find_editorial_link(
+        self, contest_html: str, problem_id: str
+    ) -> str | None:
         """
         Use OpenAI to extract an editorial URL for a given problem from contest page HTML.
         Returns None if no valid link is found.
@@ -139,16 +144,16 @@ class AsyncOpenAIClient:
         Use OpenAI to extract and structure a problem solution from tutorial content.
         """
         from domain.openai.prompts import get_extract_solution_prompt
-        from domain.models import ProblemIdentifier
 
         logger.info(f"Using OpenAI to extract solution for problem {problem_id}")
 
         # Create a minimal identifier for the prompt
         contest_id = "unknown"
-        pid = problem_id
-        identifier = ProblemIdentifier(contest_id=contest_id, problem_id=pid)
+        identifier = ProblemIdentifier(contest_id=contest_id, problem=problem_id)
 
-        prompt = get_extract_solution_prompt(tutorial_content, identifier, problem_title)
+        prompt = get_extract_solution_prompt(
+            tutorial_content, identifier, problem_title
+        )
 
         try:
             response = await self.send_message(
@@ -162,7 +167,7 @@ class AsyncOpenAIClient:
 
             return {
                 "raw_response": response,
-                "problem_id": problem_id,
+                "problem": problem_id,
             }
 
         except OpenAIAPIError:
