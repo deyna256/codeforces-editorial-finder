@@ -1,14 +1,30 @@
-# src/domain/models/editorial.py
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional, List
 
-
-@dataclass(slots=True)
+@dataclass
 class Editorial:
-    problem_id: str
-    tutorial_text: str
+    problem: str
+    solution_text: str
+    source_url: Optional[str] = None
+    extracted_at: Optional[datetime] = None
 
-
-@dataclass(slots=True)
+@dataclass
 class TutorialData:
-    title: str
+    url: str
+    format: str
     content: str
+    language: str
+    title: str
+    raw_bytes: Optional[bytes] = None
+
+# Optional: if you have CachedEditorial or CodeSnippet, define them too
+@dataclass
+class CachedEditorial:
+    editorial: Editorial
+    cached_at: datetime
+
+@dataclass
+class CodeSnippet:
+    language: str
+    code: str
