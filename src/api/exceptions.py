@@ -1,7 +1,3 @@
-"""HTTP exception handlers for domain exceptions."""
-
-from typing import TYPE_CHECKING
-
 from litestar import Request, Response
 from litestar.status_codes import (
     HTTP_400_BAD_REQUEST,
@@ -19,28 +15,13 @@ from domain.exceptions import (
     ExtractionError,
     ParsingError,
     CacheError,
-    OpenAIAPIError,
 )
-from presentation.schemas import ErrorResponse
-
-if TYPE_CHECKING:
-    pass
+from api.schemas import ErrorResponse
 
 
 def exception_to_http_response(request: Request, exc: Exception) -> Response[ErrorResponse]:
-    """
-    Convert domain exceptions to HTTP responses.
-
-    Args:
-        request: HTTP request
-        exc: Exception to convert
-
-    Returns:
-        HTTP response with error details
-    """
     logger.error(f"Exception in {request.url}: {exc}")
 
-    # Map domain exceptions to HTTP status codes
     if isinstance(exc, URLParsingError):
         status_code = HTTP_400_BAD_REQUEST
         error_type = "URLParsingError"
@@ -61,26 +42,18 @@ def exception_to_http_response(request: Request, exc: Exception) -> Response[Err
         error_type = "ParsingError"
         detail = str(exc)
 
-    elif isinstance(exc, OpenAIAPIError):
-        status_code = HTTP_503_SERVICE_UNAVAILABLE
-        error_type = "OpenAIAPIError"
-        detail = "OpenAI API is currently unavailable. Please try again later."
-
     elif isinstance(exc, CacheError):
-        # Cache errors shouldn't fail the request
         logger.warning(f"Cache error (non-fatal): {exc}")
         status_code = HTTP_500_INTERNAL_SERVER_ERROR
         error_type = "CacheError"
         detail = "Internal cache error occurred"
 
     elif isinstance(exc, CodeforcesEditorialError):
-        # Generic domain error
         status_code = HTTP_500_INTERNAL_SERVER_ERROR
         error_type = "CodeforcesEditorialError"
         detail = str(exc)
 
     else:
-        # Unexpected error
         logger.exception(f"Unexpected error: {exc}")
         status_code = HTTP_500_INTERNAL_SERVER_ERROR
         error_type = type(exc).__name__

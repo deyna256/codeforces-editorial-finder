@@ -12,18 +12,15 @@ from domain.exceptions import (
     ExtractionError,
     ParsingError,
     CacheError,
-    OpenAIAPIError,
 )
-from presentation.exceptions import exception_to_http_response
-from presentation.routes import EditorialController
+from api.exceptions import exception_to_http_response
+from api.routes import CacheController
 
 
 def create_app() -> Litestar:
     settings = get_settings()
 
-    redis_store = RedisStore.with_client(
-        url=settings.redis_url,
-    )
+    redis_store = RedisStore.with_client(url=settings.redis_url)
 
     rate_limit_config = RateLimitConfig(
         rate_limit=("minute", 10),
@@ -38,7 +35,6 @@ def create_app() -> Litestar:
         ExtractionError: exception_to_http_response,
         ParsingError: exception_to_http_response,
         CacheError: exception_to_http_response,
-        OpenAIAPIError: exception_to_http_response,
     }
 
     openapi_config = OpenAPIConfig(
@@ -48,7 +44,7 @@ def create_app() -> Litestar:
     )
 
     app = Litestar(
-        route_handlers=[EditorialController],
+        route_handlers=[CacheController],
         stores={"redis": redis_store},
         middleware=[rate_limit_config.middleware],
         exception_handlers=exception_handlers,
