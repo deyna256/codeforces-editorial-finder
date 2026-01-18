@@ -99,6 +99,7 @@ async def test_http_error_handling() -> None:
     client.get_text.side_effect = Exception("Network Error")
     identifier = ProblemIdentifier(contest_id=1234, problem_index="A")
 
+    parser = ProblemPageParser(client)
+
     with pytest.raises(ParsingError):
-        parser = ProblemPageParser(client)
-        await parser.parse_pro_
+        await parser.parse_problem_page(identifier=identifier)
