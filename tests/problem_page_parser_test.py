@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from domain.parsers.problem_page import ProblemPageParser, parse_problem
+from domain.parsers.problem_page import ProblemPageParser
 from domain.models import ProblemIdentifier
 from domain.exceptions import ParsingError
 
@@ -50,11 +50,13 @@ SAMPLE_HTML_NO_EDITORIAL = """
 </html>
 """
 
+
 @pytest.fixture
 def mock_http_client() -> AsyncMock:
     client = AsyncMock()
     client.get_text.return_value = REALISTIC_HTML
     return client
+
 
 @pytest.mark.asyncio
 async def test_parse_successful(mock_http_client) -> None:
@@ -77,6 +79,7 @@ async def test_parse_successful(mock_http_client) -> None:
     for link in expected_links:
         assert link in data.possible_editorial_links
 
+
 @pytest.mark.asyncio
 async def test_parse_no_editorial() -> None:
     """Test parsing with no 'Contest materials' box exists."""
@@ -90,6 +93,7 @@ async def test_parse_no_editorial() -> None:
 
     assert data.title == "Hard Problem"
     assert data.possible_editorial_links == []
+
 
 @pytest.mark.asyncio
 async def test_http_error_handling() -> None:

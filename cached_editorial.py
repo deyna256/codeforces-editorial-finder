@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 from .editorial import Editorial
 
+
 @dataclass
 class CachedEditorial:
     editorial: Editorial
